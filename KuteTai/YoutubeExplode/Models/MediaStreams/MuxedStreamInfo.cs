@@ -1,4 +1,6 @@
-﻿namespace YoutubeExplode.Models.MediaStreams
+﻿using System;
+
+namespace YoutubeExplode.Models.MediaStreams
 {
     /// <summary>
     /// Metadata associated with a certain <see cref="MediaStream"/> that contains both audio and video.
@@ -31,11 +33,18 @@
         public VideoResolution Resolution { get; }
 
         /// <summary>
+        /// Video resolution of the associated stream.
+        /// </summary>
+        public double Duration { get; }
+
+        public string DurationString { get; }
+
+        /// <summary>
         /// Initializes an instance of <see cref="MuxedStreamInfo"/>.
         /// </summary>
         public MuxedStreamInfo(int itag, string url, Container container, long size, AudioEncoding audioEncoding,
             VideoEncoding videoEncoding, string videoQualityLabel, VideoQuality videoQuality,
-            VideoResolution resolution)
+            VideoResolution resolution,double duration)
             : base(itag, url, container, size)
         {
             AudioEncoding = audioEncoding;
@@ -43,6 +52,8 @@
             VideoQualityLabel = videoQualityLabel;
             VideoQuality = videoQuality;
             Resolution = resolution;
+            Duration = duration;
+            DurationString = TimeSpan.FromSeconds(duration).ToString();
         }
 
         /// <inheritdoc />

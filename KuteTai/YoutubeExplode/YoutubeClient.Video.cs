@@ -22,28 +22,8 @@ namespace YoutubeExplode
         private readonly Dictionary<string, IReadOnlyList<ICipherOperation>> _cipherOperationsCache =
             new Dictionary<string, IReadOnlyList<ICipherOperation>>();
 
-        //private async Task<IReadOnlyDictionary<string, string>> GetVideoInfoDicAsync(string videoId)
-        //{
-        //    // This parameter does magic and a lot of videos don't work without it
-        //    //var eurl = $"https://youtube.googleapis.com/v/{videoId}".UrlEncode();
 
-        //    //// Execute request
-        //    //var url = $"https://youtube.com/get_video_info?video_id={videoId}&el=embedded&eurl={eurl}&hl=en";
-        //    //var raw = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
-        //    ////https://youtube.com/get_video_info?video_id=SlPhMPnQ58k&el=embedded&eurl=https%3A%2F%2Fyoutube.googleapis.com%2Fv%2FSlPhMPnQ58k&hl=en
-        //    //// Parse response as URL-encoded dictionary
-        //  var videoInfo=  File.ReadAllText("wwwroot/images/" + _fileName);
-
-        //    //  var temp = "";
-        //    await Task.Delay(1);
-        //    var result = Url.SplitQuery(videoInfo);
-        //    File.Delete("wwwroot/images/" + _fileName);
-        //    return result;
-
-
-        //}
-
-        private async Task<IReadOnlyDictionary<string, string>> GetVideoInfoDicAsync(string videoId)
+        private async Task<IReadOnlyDictionary<string, string>> GetVideoInfoDicAsync()
         {
             //  var temp = "";
             await Task.Delay(1);
@@ -51,9 +31,6 @@ namespace YoutubeExplode
          
             return result;
         }
-
-
-
 
         private async Task<HtmlDocument> GetVideoWatchPageHtmlAsync(string videoId)
         {
@@ -98,11 +75,11 @@ namespace YoutubeExplode
 
                 // Get video info dictionary
                 var requestedAt = DateTimeOffset.Now;
-                var videoInfoDic = await GetVideoInfoDicAsync(videoId).ConfigureAwait(false);
+                var videoInfoDic = await GetVideoInfoDicAsync().ConfigureAwait(false);
 
                 // Get player response JSON
                 var playerResponseJson = JToken.Parse(videoInfoDic["player_response"]);
-
+                var videoDuration =playerResponseJson.SelectToken("videoDetails.lengthSeconds").Value<double>();
                 // If video is unavailable - throw
                 if (string.Equals(playerResponseJson.SelectToken("playabilityStatus.status")?.Value<string>(), "error",
                     StringComparison.OrdinalIgnoreCase))
@@ -136,7 +113,7 @@ namespace YoutubeExplode
                         !isLiveStream ? playerResponseJson.SelectToken("streamingData.adaptiveFormats") : null;
 
                     return new PlayerConfiguration(playerSourceUrl, dashManifestUrl, hlsManifestUrl, muxedStreamInfosUrlEncoded,
-                        adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil);
+                        adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil, videoDuration);
                 }
 
                 // If the video requires purchase - throw (approach one)
@@ -197,6 +174,7 @@ namespace YoutubeExplode
                 var playerResponseRaw = playerConfigJson.SelectToken("args.player_response").Value<string>();
                 var playerResponseJson = JToken.Parse(playerResponseRaw);
 
+                var videoDuration = playerResponseJson.SelectToken("videoDetails.lengthSeconds").Value<double>();
                 // Extract whether the video is a live stream
                 var isLiveStream = playerResponseJson.SelectToken("videoDetails.isLive")?.Value<bool>() == true;
 
@@ -219,7 +197,7 @@ namespace YoutubeExplode
                     !isLiveStream ? playerResponseJson.SelectToken("streamingData.adaptiveFormats") : null;
 
                 return new PlayerConfiguration(playerSourceUrl, dashManifestUrl, hlsManifestUrl, muxedStreamInfosUrlEncoded,
-                    adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil);
+                    adaptiveStreamInfosUrlEncoded, muxedStreamInfosJson, adaptiveStreamInfosJson, validUntil, videoDuration);
             }
         }
 
@@ -306,7 +284,7 @@ namespace YoutubeExplode
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
             // Get video info dictionary
-            var videoInfoDic = await GetVideoInfoDicAsync(videoId).ConfigureAwait(false);
+            var videoInfoDic = await GetVideoInfoDicAsync().ConfigureAwait(false);
 
             // Get player response JSON
             var playerResponseJson = JToken.Parse(videoInfoDic["player_response"]);
@@ -360,7 +338,7 @@ namespace YoutubeExplode
                 throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
             // Get video info dictionary
-            var videoInfoDic = await GetVideoInfoDicAsync(videoId).ConfigureAwait(false);
+            var videoInfoDic = await GetVideoInfoDicAsync().ConfigureAwait(false);
 
             // Get player response JSON
             var playerResponseJson = JToken.Parse(videoInfoDic["player_response"]);
@@ -452,7 +430,7 @@ namespace YoutubeExplode
 
                     // Add to list
                     muxedStreamInfoMap[itag] = new MuxedStreamInfo(itag, url, container, contentLength, audioEncoding, videoEncoding,
-                        videoQualityLabel, videoQuality, resolution);
+                        videoQualityLabel, videoQuality, resolution,playerConfiguration.Duration);
                 }
             }
 
@@ -525,7 +503,7 @@ namespace YoutubeExplode
 
                     // Add to list
                     muxedStreamInfoMap[itag] = new MuxedStreamInfo(itag, url, container, contentLength, audioEncoding, videoEncoding,
-                        videoQualityLabel, videoQuality, resolution);
+                        videoQualityLabel, videoQuality, resolution,playerConfiguration.Duration);
                 }
             }
 
@@ -782,52 +760,9 @@ namespace YoutubeExplode
             var videoStreamInfos = videoStreamInfoMap.Values.OrderByDescending(s => s.VideoQuality).ToArray();
 
             return new MediaStreamInfoSet(muxedStreamInfos, audioStreamInfos, videoStreamInfos,
-                playerConfiguration.HlsManifestUrl, playerConfiguration.ValidUntil);
+                playerConfiguration.HlsManifestUrl, playerConfiguration.ValidUntil,playerConfiguration.Duration);
         }
 
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<ClosedCaptionTrackInfo>> GetVideoClosedCaptionTrackInfosAsync(string videoId)
-        {
-            if (!ValidateVideoId(videoId))
-                throw new ArgumentException($"Invalid YouTube video ID [{videoId}].", nameof(videoId));
 
-            // Get video info dictionary
-            var videoInfoDic = await GetVideoInfoDicAsync(videoId).ConfigureAwait(false);
-
-            // Get player response JSON
-            var playerResponseJson = JToken.Parse(videoInfoDic["player_response"]);
-
-            // If video is unavailable - throw
-            if (string.Equals(playerResponseJson.SelectToken("playabilityStatus.status")?.Value<string>(), "error",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                throw new VideoUnavailableException(videoId, $"Video [{videoId}] is unavailable.");
-            }
-
-            // Get closed caption track infos
-            var trackInfos = new List<ClosedCaptionTrackInfo>();
-            foreach (var trackJson in playerResponseJson.SelectTokens("..captionTracks[*]"))
-            {
-                // Get URL
-                var url = trackJson.SelectToken("baseUrl").Value<string>();
-
-                // Set format to the one we know how to deal with
-                url = Url.SetQueryParameter(url, "format", "3");
-
-                // Get language
-                var languageCode = trackJson.SelectToken("languageCode").Value<string>();
-                var languageName = trackJson.SelectToken("name.simpleText").Value<string>();
-                var language = new Language(languageCode, languageName);
-
-                // Get whether the track is autogenerated
-                var isAutoGenerated = trackJson.SelectToken("vssId").Value<string>()
-                    .StartsWith("a.", StringComparison.OrdinalIgnoreCase);
-
-                // Add to list
-                trackInfos.Add(new ClosedCaptionTrackInfo(url, language, isAutoGenerated));
-            }
-
-            return trackInfos;
-        }
     }
 }

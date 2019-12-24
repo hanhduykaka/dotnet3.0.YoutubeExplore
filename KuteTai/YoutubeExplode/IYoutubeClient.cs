@@ -31,10 +31,6 @@ namespace YoutubeExplode
         /// </summary>
         Task<MediaStreamInfoSet> GetVideoMediaStreamInfosAsync(string videoId);
 
-        /// <summary>
-        /// Gets all available closed caption track infos for given video.
-        /// </summary>
-        Task<IReadOnlyList<ClosedCaptionTrackInfo>> GetVideoClosedCaptionTrackInfosAsync(string videoId);
 
         #endregion
 

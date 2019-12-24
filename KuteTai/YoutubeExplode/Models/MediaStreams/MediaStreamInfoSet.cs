@@ -34,6 +34,8 @@ namespace YoutubeExplode.Models.MediaStreams
         /// </summary>
         public DateTimeOffset ValidUntil { get; }
 
+        public double Duration { get; }
+
         /// <summary>
         /// Initializes an instance of <see cref="MediaStreamInfoSet"/>.
         /// </summary>
@@ -41,13 +43,14 @@ namespace YoutubeExplode.Models.MediaStreams
             IReadOnlyList<AudioStreamInfo> audio,
             IReadOnlyList<VideoStreamInfo> video,
             string? hlsLiveStreamUrl, 
-            DateTimeOffset validUntil)
+            DateTimeOffset validUntil,double duration)
         {
             Muxed = muxed;
             Audio = audio;
             Video = video;
             HlsLiveStreamUrl = hlsLiveStreamUrl;
             ValidUntil = validUntil;
+            Duration = duration;
         }
     }
 }

@@ -21,9 +21,11 @@ namespace YoutubeExplode.Internal
 
         public DateTimeOffset ValidUntil { get; }
 
+        public double Duration{ get; }  
+
         public PlayerConfiguration(string? playerSourceUrl, string? dashManifestUrl, string? hlsManifestUrl,
             string? muxedStreamInfosUrlEncoded, string? adaptiveStreamInfosUrlEncoded, JToken? muxedStreamInfosJson,
-            JToken? adaptiveStreamInfosJson, DateTimeOffset validUntil)
+            JToken? adaptiveStreamInfosJson, DateTimeOffset validUntil,double duration)
         {
             PlayerSourceUrl = playerSourceUrl;
             DashManifestUrl = dashManifestUrl;
@@ -33,6 +35,7 @@ namespace YoutubeExplode.Internal
             MuxedStreamInfosJson = muxedStreamInfosJson;
             AdaptiveStreamInfosJson = adaptiveStreamInfosJson;
             ValidUntil = validUntil;
+            Duration = duration;
         }
     }
 }
