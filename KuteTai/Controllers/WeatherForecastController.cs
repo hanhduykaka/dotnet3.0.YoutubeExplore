@@ -147,6 +147,35 @@ namespace KuteTai.Controllers
         }
 
 
+        [HttpPost("api/v3/youtube")]
+        public async Task<ActionResult<MuxedStreamInfo>> YoutubeVersion3Async([FromBody]VideoInfoModel std)
+        {
+            // Getting Name
+            string videoId = std.VideoId;
+
+            // Getting UUID
+            string uuid = std.UUID;
+
+            // Getting Image
+            var contentFile = std.ContentFile;
+            // Saving Image on Server
+
+
+            string currentDate = new DateTime().ToShortDateString();
+
+            if (!string.IsNullOrWhiteSpace(contentFile))
+            {
+
+                YoutubeClient client = new YoutubeClient(new System.Net.Http.HttpClient(), contentFile);
+                var streamInfoSet = await client.GetVideoMediaStreamInfosAsync(videoId);
+                var streamInfo = streamInfoSet.Muxed.WithHighestVideoQuality();
+
+                return streamInfo;
+            }
+            return null;
+        }
+
+
     }
 
 

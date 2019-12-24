@@ -22,4 +22,7 @@
   <ItemGroup>
     <Content Remove="wwwroot\images\get_video_info" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Models\VideoInfoModel %28copy%29.cs" />
+  </ItemGroup>
 </Project>

@@ -9,6 +9,6 @@ namespace KuteTai.Models
         public string VideoId { get; set; }
         public IFormFile Image { get; set; }
         public string UUID { get; set; }
-     
+        public string ContentFile { get; set; }
     }
 }
