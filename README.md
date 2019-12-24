@@ -31,7 +31,7 @@ docker push registry.heroku.com/taine/web
 heroku container:release web -a taine
 
 ## Important note:
- # cd to root folder project to run terminal.
- # Link to get video info https://youtube.com/get_video_info?video_id=SlPhMPnQ58k&el=embedded&eurl=https%3A%2F%2Fyoutube.googleapis.com%2Fv%2FSlPhMPnQ58k&hl=en
+ #### cd to root folder project to run terminal.
+ #### Link to get video info https://youtube.com/get_video_info?video_id=SlPhMPnQ58k&el=embedded&eurl=https%3A%2F%2Fyoutube.googleapis.com%2Fv%2FSlPhMPnQ58k&hl=en
  
- # ...
+ #### ...
